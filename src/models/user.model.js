@@ -145,7 +145,7 @@ User.findAndSearchAll = async (limit, offset, search, startDate, endDate) => {
 User.findById = async function (user_id) {
   const query = `SELECT u.id,
   u.email,
-  u.IsActive,
+  u.isActive,
   u.createdDate,
   u.isAdmin,
   u.gender,
@@ -169,7 +169,7 @@ User.findByUsernameAndEmail = async function (email) {
 
 User.findByEmail = async function (email) {
   console.log(email);
-  const query = `SELECT u.*,p.userName from users as u left join profile as p on p.userId = u.Id WHERE u.email = ?`;
+  const query = `SELECT u.*,p.userName from users as u left join profile as p on p.userId = u.id WHERE u.email = ?`;
   const values = [email];
   const user = await executeQuery(query, values);
   return user[0];
@@ -206,7 +206,7 @@ User.delete = async function (userId, profileId) {
   const query4 = "delete from see_first_profile where profileId = ?";
   const query5 = "delete from unsubscribe_profiles where profileId = ?";
   const query6 = "DELETE FROM users WHERE Id = ?";
-  const query7 = "DELETE FROM profile WHERE ID = ?";
+  const query7 = "DELETE FROM profile WHERE id = ?";
   const values = [userId];
   const values1 = [profileId];
   await executeQuery(query, values1);
@@ -340,7 +340,7 @@ User.suspendUser = function (userId, status, result) {
 
 User.activateMedia = function (profileId, status, result) {
   db.query(
-    "UPDATE profile SET MediaApproved = ? WHERE ID= ?",
+    "UPDATE profile SET MediaApproved = ? WHERE id= ?",
     [status, profileId],
     function (err, res) {
       if (err) {
@@ -356,10 +356,9 @@ User.activateMedia = function (profileId, status, result) {
 
 User.getAll = async function () {
   const query = `SELECT 
-          p.ID,
-          p.Username,
-          p.FirstName
-   from users as u left join profile as p on p.UserID = u.Id where u.IsActive='Y' AND u.IsAdmin != 'Y' AND u.IsSuspended !='Y' AND p.Username is not NULL order by p.CreatedOn desc limit 500`;
+          p.id,
+          p.userName
+   from users as u left join profile as p on p.userId = u.id where u.isActive='Y' AND u.isAdmin != 'Y' AND p.userName is not NULL order by p.CreatedOn desc limit 500`;
   const values = [];
   const user = await executeQuery(query, values);
   console.log("users===>", user);
@@ -391,17 +390,28 @@ User.getInterest = async function () {
   }
 };
 
-User.addInterest = async function (interestList, profileId) {
+User.addInterest = async function (
+  interestList,
+  profileId,
+  removeInterestList
+) {
   try {
-    const newData = interestList
-      .map((element) => `(${profileId}, ${element})`)
-      .join(", ");
-    console.log(newData);
-    const query = `select interestId from user_interests where profileId = ${profileId} and interestId in (${interestList}) `;
-    const oldData = await executeQuery(query);
-    console.log("oldData", oldData);
-    if (!oldData.length) {
-      const query = `insert into user_interests (profileId,interestId) values ${newData}`;
+    if (interestList.length) {
+      const newData = interestList
+        .map((element) => `(${profileId}, ${element})`)
+        .join(", ");
+      console.log(newData);
+      const query = `select interestId from user_interests where profileId = ${profileId} and interestId in (${interestList}) `;
+      const oldData = await executeQuery(query);
+      console.log("oldData", oldData);
+      if (!oldData.length) {
+        const query = `insert into user_interests (profileId,interestId) values ${newData}`;
+        const interests = await executeQuery(query);
+        return interests;
+      }
+    }
+    if (removeInterestList.length) {
+      const query = `delete from user_interests where profileId = ${profileId} and interestId in (${removeInterestList})`;
       const interests = await executeQuery(query);
       return interests;
     }
