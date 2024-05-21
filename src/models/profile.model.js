@@ -327,7 +327,7 @@ Profile.getProfiles = async (limit, offset, id, gender) => {
     p.relationshipHistory,
     p.bodyType,
     p.idealDate
-  FROM profile as p left join users as u on u.id = p.userId where p.id != ${id} and u.gender != '${
+  FROM profile as p left join users as u on u.id = p.userId where p.id != ${id} and u.gender = '${
     gender === "man" ? "woman" : "man"
   }' and p.id not in (SELECT UnsubscribeProfileId FROM unsubscribe_profiles where ProfileId = ${id}) ORDER BY p.id DESC`;
   if (limit > 0 && offset >= 0) {
