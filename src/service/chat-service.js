@@ -119,6 +119,7 @@ LEFT JOIN
     messages AS m ON m.roomId = r.id AND m.sentBy != ${params.profileId} AND m.isRead = 'N'
 WHERE
     (r.profileId1 = ? OR r.profileId2 = ?) AND r.isDeleted = 'N'
+    AND p.id not in (SELECT UnsubscribeProfileId FROM unsubscribe_profiles where ProfileId = ${params.profileId})
 GROUP BY
     r.id, r.profileId1, r.isAccepted,r.updatedDate, p.id, p.userName, p.profilePicName
 ORDER BY
@@ -172,7 +173,7 @@ const createChatRoom = async function (params) {
         roomId: room?.insertId,
         notificationByProfileId: data?.profileId1,
         actionType: "M",
-        msg: "invited you to private chat",
+        msg: `invited you to private ${params.type}`,
       });
       console.log(notification);
       const findUser = `select u.email,p.userName from users as u left join profile as p on p.userId = u.id where p.id = ?`;
@@ -186,7 +187,7 @@ const createChatRoom = async function (params) {
         profileId: senderData[0].id,
         userName: userData[0].userName,
         senderUsername: senderData[0].userName,
-        msg: `${senderData[0].userName} invited you to private chat`,
+        msg: `${senderData[0].userName} invited you to private ${params.type}`,
       };
       console.log(userDetails);
       await notificationMailOnInvite(userDetails);
@@ -800,6 +801,7 @@ const getGroupList = async function (params) {
             AND m.createdDate > gm.switchDate
             AND m.sentBy != ?
             WHERE gm.profileId = ?
+            and p.id not in (SELECT UnsubscribeProfileId FROM unsubscribe_profiles where ProfileId = ${params.profileId})
             GROUP BY g.id
             ORDER BY g.updatedDate DESC`;
     // LEFT JOIN readMessage AS rm ON rm.messageId = m.id
