@@ -37,6 +37,7 @@ User.login = function (email, Id, result) {
             p.isSmoke,
             p.relationshipType,
             p.relationshipHistory,
+            p.userStatus,
             p.bodyType,
             p.idealDate,
             p.createdDate,
