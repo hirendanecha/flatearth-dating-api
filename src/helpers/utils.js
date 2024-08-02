@@ -154,7 +154,7 @@ exports.notificationMailOnInvite = async (userData) => {
 
   const mailObj = {
     email: userData.email,
-    subject: "OD notification",
+    subject: "Dating notification",
     root: "../email-templates/notification.ejs",
     templateData: { name: name, msg: msg, url: redirectUrl },
   };
